@@ -1,0 +1,27 @@
+on:
+  push:
+    branches:
+      - main  # main 브랜치에 푸시될 때마다 트리거됩니다.
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+        # checkout the repo
+        - name: 'Checkout GitHub Action'
+          uses: actions/checkout@main
+          
+        - name: 'Login via Azure CLI'
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+        - name: 'Build and push image'
+          uses: azure/docker-login@v1
+          with:
+            login-server: ${{ secrets.AZURE_ACR_ADDRESS }}
+            username: ${{ secrets.AZURE_ACR_USERID }}
+            password: ${{ secrets.AZURE_ACR_PASSWD }}
+        - run: |
+            docker build . -t ${{ secrets.AZURE_ACR_ADDRESS }}/sampleapp:${{ github.sha }}
+            docker push ${{ secrets.AZURE_ACR_ADDRESS }}/sampleapp:${{ github.sha }}
